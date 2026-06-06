@@ -1,7 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { NotebookPen, User, Sparkles, Flame, Heart } from "lucide-react"
+import { useEffect, useState } from "react"
+import {
+  NotebookPen,
+  Sparkles,
+  Flame,
+  Heart,
+  Check,
+  ChevronDown,
+} from "lucide-react"
 import type { Food } from "@/lib/foods"
 import { FoodCard } from "@/components/food-card"
 
@@ -120,25 +127,117 @@ export function LogMealView() {
   )
 }
 
+const CONDITIONS = ["PCOS", "PCOD", "PMS", "All"] as const
+const PHASES = ["Menstrual", "Follicular", "Ovulatory", "Luteal"] as const
+const STORAGE_KEY = "insync-profile"
+
+type Profile = {
+  name: string
+  condition: (typeof CONDITIONS)[number]
+  phase: (typeof PHASES)[number]
+}
+
+const DEFAULT_PROFILE: Profile = {
+  name: "Aanya",
+  condition: "PCOS",
+  phase: "Luteal",
+}
+
+function SelectField({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  id: string
+  label: string
+  value: string
+  options: readonly string[]
+  onChange: (value: string) => void
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className="text-xs font-semibold uppercase tracking-wide text-accent-foreground"
+      >
+        {label}
+      </label>
+      <div className="relative mt-1.5">
+        <select
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none rounded-2xl border border-input bg-secondary/50 px-4 py-3 pr-10 text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  )
+}
+
 export function ProfileView({ savedCount }: { savedCount: number }) {
+  const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
+  const [draft, setDraft] = useState<Profile>(DEFAULT_PROFILE)
+  const [justSaved, setJustSaved] = useState(false)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const parsed = { ...DEFAULT_PROFILE, ...JSON.parse(raw) } as Profile
+        setProfile(parsed)
+        setDraft(parsed)
+      }
+    } catch {
+      // ignore malformed storage
+    }
+  }, [])
+
+  const dirty =
+    draft.name !== profile.name ||
+    draft.condition !== profile.condition ||
+    draft.phase !== profile.phase
+
+  function save() {
+    const cleaned: Profile = { ...draft, name: draft.name.trim() || "You" }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned))
+    setProfile(cleaned)
+    setDraft(cleaned)
+    setJustSaved(true)
+    setTimeout(() => setJustSaved(false), 2000)
+  }
+
   const stats = [
     { label: "Foods saved", value: savedCount },
     { label: "Meals logged", value: 24 },
     { label: "Day streak", value: 6 },
   ]
 
+  const initial = profile.name.trim().charAt(0).toUpperCase() || "Y"
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4">
         <div className="flex size-16 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
-          A
+          {initial}
         </div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">
-            Aanya
+            {profile.name}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Tracking PCOS · Luteal phase 🍂
+            Tracking {profile.condition} · {profile.phase} phase
           </p>
         </div>
       </div>
@@ -159,32 +258,73 @@ export function ProfileView({ savedCount }: { savedCount: number }) {
         ))}
       </div>
 
+      <div className="space-y-4 rounded-3xl border border-border bg-card p-5">
+        <h3 className="font-heading text-base font-bold text-foreground">
+          Your details
+        </h3>
+
+        <div>
+          <label
+            htmlFor="profile-name"
+            className="text-xs font-semibold uppercase tracking-wide text-accent-foreground"
+          >
+            Name
+          </label>
+          <input
+            id="profile-name"
+            value={draft.name}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, name: e.target.value }))
+            }
+            placeholder="Your name"
+            className="mt-1.5 w-full rounded-2xl border border-input bg-secondary/50 px-4 py-3 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+
+        <SelectField
+          id="profile-condition"
+          label="Condition"
+          value={draft.condition}
+          options={CONDITIONS}
+          onChange={(v) =>
+            setDraft((d) => ({ ...d, condition: v as Profile["condition"] }))
+          }
+        />
+
+        <SelectField
+          id="profile-phase"
+          label="Cycle phase"
+          value={draft.phase}
+          options={PHASES}
+          onChange={(v) =>
+            setDraft((d) => ({ ...d, phase: v as Profile["phase"] }))
+          }
+        />
+
+        <button
+          type="button"
+          onClick={save}
+          disabled={!dirty && !justSaved}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition disabled:opacity-50"
+        >
+          {justSaved ? (
+            <>
+              <Check className="size-4" aria-hidden="true" />
+              Saved
+            </>
+          ) : (
+            "Save profile"
+          )}
+        </button>
+      </div>
+
       <div className="rounded-3xl bg-primary p-5 text-primary-foreground">
         <Sparkles className="size-6" aria-hidden="true" />
         <p className="mt-2 font-heading font-semibold">Today&apos;s tip</p>
         <p className="mt-1 text-sm leading-relaxed text-primary-foreground/90">
-          You&apos;re in your luteal phase — lean into magnesium-rich foods like
-          makhana and bajra to ease cravings and PMS.
+          You&apos;re in your {profile.phase.toLowerCase()} phase — lean into
+          magnesium-rich foods like makhana and bajra to ease cravings and PMS.
         </p>
-      </div>
-
-      <div className="space-y-2">
-        {["My conditions", "Cycle settings", "Notifications", "Help & support"].map(
-          (item) => (
-            <div
-              key={item}
-              className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3.5"
-            >
-              <span className="flex items-center gap-3 text-sm font-medium text-foreground">
-                <User className="size-4 text-muted-foreground" aria-hidden="true" />
-                {item}
-              </span>
-              <span className="text-muted-foreground" aria-hidden="true">
-                ›
-              </span>
-            </div>
-          ),
-        )}
       </div>
     </div>
   )
