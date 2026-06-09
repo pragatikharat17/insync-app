@@ -138,7 +138,7 @@ type Profile = {
 }
 
 const DEFAULT_PROFILE: Profile = {
-  name: "Aanya",
+  name: "Pragati",
   condition: "PCOS",
   phase: "Luteal",
 }
