@@ -1,14 +1,15 @@
 "use client"
 
-import { Search, Bookmark, NotebookPen, User } from "lucide-react"
+import { Search, Bookmark, NotebookPen, User, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export type Tab = "Search" | "Saved" | "Log Meal" | "Profile"
+export type Tab = "Search" | "Saved" | "Log Meal" | "Ask" | "Profile"
 
 const items: { tab: Tab; label: string; icon: typeof Search }[] = [
   { tab: "Search", label: "Search", icon: Search },
   { tab: "Saved", label: "Saved", icon: Bookmark },
   { tab: "Log Meal", label: "Log Meal", icon: NotebookPen },
+  { tab: "Ask", label: "Ask", icon: MessageCircle },
   { tab: "Profile", label: "Profile", icon: User },
 ]
 

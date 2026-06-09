@@ -7,12 +7,21 @@ import { FoodCard } from "@/components/food-card"
 import { BottomNav, type Tab } from "@/components/bottom-nav"
 import { SavedView, LogMealView, ProfileView } from "@/components/tab-views"
 import { cn } from "@/lib/utils"
+import { AskView } from "@/components/ask-view"
 
 export function HarmonieApp() {
   const [tab, setTab] = useState<Tab>("Search")
   const [query, setQuery] = useState("")
   const [activeCat, setActiveCat] = useState<"All" | Category>("All")
   const [allFoods, setAllFoods] = useState<Food[]>([])
+  const [profile, setProfile] = useState({ condition: "PCOS", phase: "Follicular" })
+  useEffect(() => {
+    const saved = localStorage.getItem("insync-profile")
+    if (saved) {
+      const p = JSON.parse(saved)
+      setProfile({ condition: p.condition || "PCOS", phase: p.phase || "Follicular" })
+    }
+  }, [tab])
   useEffect(() => { fetchFoods().then(setAllFoods) }, [])
   const [savedIds, setSavedIds] = useState<string[]>(["besan-chilla"])
 
@@ -142,7 +151,9 @@ export function HarmonieApp() {
         )}
 
         {tab === "Log Meal" && <LogMealView />}
-
+        {tab === "Ask" && (
+          <AskView condition={profile.condition} phase={profile.phase} />
+        )}
         {tab === "Profile" && <ProfileView savedCount={savedIds.length} />}
       </main>
 
