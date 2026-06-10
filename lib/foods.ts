@@ -80,11 +80,12 @@ function getEmoji(name: string): string {
 function inferCategory(name: string, bestTime: string): Category {
   if (!name) return "Snacks"
   const n = name.toLowerCase()
-  if (["poha", "idli", "dosa", "upma", "paratha", "chilla", "rava", "sabudana", "bread"].some(w => n.includes(w))) return "Breakfast"
-  if (["rice", "biryani", "roti", "naan", "paratha", "puri", "bread"].some(w => n.includes(w))) return "Rice & Roti"
-  if (["dal", "rajma", "chhole", "sambar", "kadhi", "chana"].some(w => n.includes(w))) return "Dal"
-  if (["chai", "lassi", "water", "juice", "coffee", "milk", "doodh", "sherbet"].some(w => n.includes(w))) return "Drinks"
-  if (["halwa", "ladoo", "barfi", "kheer", "jalebi", "gulab", "chocolate", "mithai", "pedha", "burfi"].some(w => n.includes(w))) return "Sweets"
+  if (["bread", "pasta", "pizza", "burger", "pancake", "waffle", "croissant", "bagel"].some(w => n.includes(w))) return "Rice & Roti"
+  if (["poha", "idli", "dosa", "upma", "paratha", "chilla", "rava", "sabudana"].some(w => n.includes(w))) return "Breakfast"
+  if (["rice", "biryani", "roti", "naan", "puri"].some(w => n.includes(w))) return "Rice & Roti"
+  if (["dal", "rajma", "chhole", "sambar", "kadhi", "chana", "lentil", "bean", "tofu", "chickpea"].some(w => n.includes(w))) return "Dal"
+  if (["chai", "lassi", "water", "juice", "coffee", "milk", "doodh", "sherbet", "tea", "soda", "latte"].some(w => n.includes(w))) return "Drinks"
+  if (["halwa", "ladoo", "barfi", "kheer", "jalebi", "gulab", "chocolate", "mithai", "pedha", "honey", "sugar", "syrup"].some(w => n.includes(w))) return "Sweets"
   if (bestTime === "morning") return "Breakfast"
   return "Snacks"
 }
