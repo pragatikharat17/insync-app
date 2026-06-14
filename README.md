@@ -236,10 +236,6 @@ Full native app. Rewrite UI in React Native, keep Supabase + Groq backend unchan
 | Built in | 2 days |
 | Monthly cost | ~Rs 0 (free tiers) |
 
----
-
-## Built by
-
-Pragati Kharat - built as a personal project to fill a genuine gap. No desi-specific, PCOS-aware food resource exists for Indian women. This app is for every girl who's been told "just eat healthy" without anyone explaining what that means for her hormones, her cycle, and her dal chawal.
+--
 
 🌿 *eat in sync with your cycle*
