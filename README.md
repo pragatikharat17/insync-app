@@ -11,7 +11,7 @@ A hormone-health food app for Indian women with PCOS, PCOD, PMS and mood swings.
 ## Features
 
 - **Food search** - 546+ Indian and Western foods rated for PCOS, PCOD, PMS and mood swings (1-10), with glycemic index, inflammation score, cycle phase guide and 3 actionable hacks per food
-- **AI chat ("Ask InSync")** - ask anything in Hindi, Hinglish or English ("kya mai biryani kha sakti hu?") and get personalised answers streamed in real time, based on your condition and cycle phase
+- **AI chat ("Ask InSync")** - ask anything and get personalised answers streamed in real time, based on your condition and cycle phase
 - **Cuisine filter** - switch between Indian and Western foods
 - **Saved foods** - bookmark your hormone-friendly favourites
 - **Meal log** - track what you eat daily
