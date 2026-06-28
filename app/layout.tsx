@@ -19,6 +19,16 @@ export const metadata: Metadata = {
   description:
     'A food search app for Indian women with PCOS, PCOD and PMS. Search any Indian food and see GI, PCOS scores, hacks and the best cycle phase to eat it.',
   generator: 'v0.app',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'InSync',
+  },
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
+  },
 }
 
 export const viewport: Viewport = {
