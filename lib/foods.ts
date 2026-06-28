@@ -77,39 +77,13 @@ function getEmoji(name: string): string {
 }
 
 
-function inferCategory(name: string, bestTime: string): Category {
-  if (!name) return "Snacks"
-  const n = name.toLowerCase()
-  
-  // Drinks first — most specific
-  if (["chai", "lassi", "water", "juice", "coffee", "milk", "doodh", 
-       "sherbet", "tea", "soda", "latte", "smoothie", "coconut"].some(w => n.includes(w))) return "Drinks"
-  
-  // Sweets
-  if (["halwa", "ladoo", "barfi", "kheer", "jalebi", "gulab", "chocolate", 
-       "mithai", "pedha", "honey", "syrup", "kulfi", "falooda", "burfi",
-       "rasgulla", "sandesh", "modak"].some(w => n.includes(w))) return "Sweets"
-  
-  // Dal & protein
-  if (["dal", "rajma", "chhole", "sambar", "kadhi", "chana", "lentil", 
-       "bean", "tofu", "chickpea", "moong", "masoor", "toor", "urad",
-       "edamame", "legume"].some(w => n.includes(w))) return "Dal"
-  
-  // Rice & Roti
-  if (["rice", "biryani", "roti", "naan", "puri", "paratha", "bread",
-       "pasta", "pizza", "burger", "pancake", "waffle", "croissant", 
-       "bagel", "couscous", "quinoa", "barley", "buckwheat"].some(w => n.includes(w))) return "Rice & Roti"
-  
-  // Breakfast
-  if (["poha", "idli", "dosa", "upma", "chilla", "rava", "sabudana",
-       "oatmeal", "oats", "cornflake", "muesli", "granola", "porridge",
-       "uttapam", "appam", "puttu", "dhokla", "handvo", "thepla",
-       "besan", "moong"].some(w => n.includes(w))) return "Breakfast"
-  
-  // use best_time as fallback
-  if (bestTime === "morning") return "Breakfast"
-  
-  return "Snacks"
+function mapCategory(bestTime: string): Category {
+  switch (bestTime) {
+    case "morning": return "Breakfast"
+    case "afternoon": return "Dal"
+    case "evening": return "Snacks"
+    default: return "Snacks"
+  }
 }
 
 function inferPhase(phaseData: Record<string, string>): CyclePhase {
@@ -138,7 +112,7 @@ function transformRow(row: any): Food {
     id: row.name.toLowerCase().replace(/[^a-z0-9]/g, "-"),
     name: row.name,
     emoji: getEmoji(row.name),
-    category: inferCategory(row.name, row.best_time || ""),
+    category: (row.category as Category) || "Snacks",
     gi: row.glycemic_index || 50,
     giLevel: (row.gi_category as GiLevel) || "medium",
     pcosScore: row.pcos_score || 5,
