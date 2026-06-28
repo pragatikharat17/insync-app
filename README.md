@@ -10,7 +10,7 @@ A hormone-health food app for Indian women with PCOS, PCOD, PMS and mood swings.
 
 Scan the QR code below to open InSync on your phone:
 
-![InSync QR Code](https://drive.google.com/file/d/15B-lbBYFQdcxD6RCNz0rKN3TVCpTf7wy/view?usp=share_link)
+![InSync QR Code](public/insync_qr.png)
 
 **Install as app (no App Store needed):**
 - **iPhone:** Open in Safari → Share (↑) → "Add to Home Screen"
