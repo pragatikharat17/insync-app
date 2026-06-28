@@ -48,6 +48,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} bg-background`}
     >
       <body className="font-sans antialiased">
+        <script dangerouslySetInnerHTML={{
+          __html: `if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js') }`
+        }} />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
