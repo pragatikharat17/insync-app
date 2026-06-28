@@ -6,6 +6,16 @@ A hormone-health food app for Indian women with PCOS, PCOD, PMS and mood swings.
 **Live app:** [insync-app.vercel.app](https://insync-app.vercel.app)
 **GitHub:** [github.com/pragatikharat17/insync-app](https://github.com/pragatikharat17/insync-app)
 
+## Open on Mobile
+
+Scan the QR code below to open InSync on your phone:
+
+![InSync QR Code](https://drive.google.com/file/d/15B-lbBYFQdcxD6RCNz0rKN3TVCpTf7wy/view?usp=share_link)
+
+**Install as app (no App Store needed):**
+- **iPhone:** Open in Safari → Share (↑) → "Add to Home Screen"
+- **Android:** Open in Chrome → three dots → "Add to Home Screen"
+
 ---
 
 ## Features
