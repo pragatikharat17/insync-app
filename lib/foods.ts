@@ -80,13 +80,35 @@ function getEmoji(name: string): string {
 function inferCategory(name: string, bestTime: string): Category {
   if (!name) return "Snacks"
   const n = name.toLowerCase()
-  if (["bread", "pasta", "pizza", "burger", "pancake", "waffle", "croissant", "bagel"].some(w => n.includes(w))) return "Rice & Roti"
-  if (["poha", "idli", "dosa", "upma", "paratha", "chilla", "rava", "sabudana"].some(w => n.includes(w))) return "Breakfast"
-  if (["rice", "biryani", "roti", "naan", "puri"].some(w => n.includes(w))) return "Rice & Roti"
-  if (["dal", "rajma", "chhole", "sambar", "kadhi", "chana", "lentil", "bean", "tofu", "chickpea"].some(w => n.includes(w))) return "Dal"
-  if (["chai", "lassi", "water", "juice", "coffee", "milk", "doodh", "sherbet", "tea", "soda", "latte"].some(w => n.includes(w))) return "Drinks"
-  if (["halwa", "ladoo", "barfi", "kheer", "jalebi", "gulab", "chocolate", "mithai", "pedha", "honey", "sugar", "syrup"].some(w => n.includes(w))) return "Sweets"
+  
+  // Drinks first — most specific
+  if (["chai", "lassi", "water", "juice", "coffee", "milk", "doodh", 
+       "sherbet", "tea", "soda", "latte", "smoothie", "coconut"].some(w => n.includes(w))) return "Drinks"
+  
+  // Sweets
+  if (["halwa", "ladoo", "barfi", "kheer", "jalebi", "gulab", "chocolate", 
+       "mithai", "pedha", "honey", "syrup", "kulfi", "falooda", "burfi",
+       "rasgulla", "sandesh", "modak"].some(w => n.includes(w))) return "Sweets"
+  
+  // Dal & protein
+  if (["dal", "rajma", "chhole", "sambar", "kadhi", "chana", "lentil", 
+       "bean", "tofu", "chickpea", "moong", "masoor", "toor", "urad",
+       "edamame", "legume"].some(w => n.includes(w))) return "Dal"
+  
+  // Rice & Roti
+  if (["rice", "biryani", "roti", "naan", "puri", "paratha", "bread",
+       "pasta", "pizza", "burger", "pancake", "waffle", "croissant", 
+       "bagel", "couscous", "quinoa", "barley", "buckwheat"].some(w => n.includes(w))) return "Rice & Roti"
+  
+  // Breakfast
+  if (["poha", "idli", "dosa", "upma", "chilla", "rava", "sabudana",
+       "oatmeal", "oats", "cornflake", "muesli", "granola", "porridge",
+       "uttapam", "appam", "puttu", "dhokla", "handvo", "thepla",
+       "besan", "moong"].some(w => n.includes(w))) return "Breakfast"
+  
+  // use best_time as fallback
   if (bestTime === "morning") return "Breakfast"
+  
   return "Snacks"
 }
 
