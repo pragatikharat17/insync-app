@@ -136,17 +136,21 @@ function transformRow(row: any): Food {
 
 // fetch all foods from Supabase
 export async function fetchFoods(): Promise<Food[]> {
-  const { data, error } = await supabase
-    .from("foods")
-    .select("*")
-    .order("pcos_score", { ascending: false })
+  try {
+    const { data, error } = await supabase
+      .from("foods")
+      .select("*")
+      .order("pcos_score", { ascending: false })
 
-  if (error) {
-    console.error("Supabase error:", error)
-    return []
+    if (error) throw error
+    if (!data || data.length === 0) throw new Error("No data returned")
+
+    return data.map(transformRow)
+
+  } catch (error) {
+    console.error("Supabase failed, using fallback:", error)
+    return FALLBACK_FOODS
   }
-
-  return (data || []).map(transformRow)
 }
 
 // search foods by name
@@ -191,3 +195,72 @@ export function scoreColor(score: number) {
 
 // fallback empty export so old imports don't crash before data loads
 export const foods: Food[] = []
+
+const FALLBACK_FOODS: Food[] = [
+  {
+    id: "besan-chilla", name: "Besan Chilla", emoji: "🥞",
+    category: "Breakfast", gi: 28, giLevel: "low",
+    pcosScore: 10, pcodScore: 9, pmsScore: 8, moodScore: 8,
+    verdict: "PCOS superstar — high protein, almost no sugar spike.",
+    hacks: ["Add spinach and paneer", "Cook in minimal ghee", "Add ajwain for bloating"],
+    bestPhase: "Luteal", tags: ["high protein", "low GI"]
+  },
+  {
+    id: "idli", name: "Idli", emoji: "⚪",
+    category: "Breakfast", gi: 38, giLevel: "low",
+    pcosScore: 9, pcodScore: 9, pmsScore: 8, moodScore: 9,
+    verdict: "Best PCOS breakfast — fermented, light, gut-friendly.",
+    hacks: ["Ferment 12+ hours", "Eat with sambar", "Max 2-3 pieces"],
+    bestPhase: "Follicular", tags: ["fermented", "low GI"]
+  },
+  {
+    id: "rajma", name: "Rajma", emoji: "🫘",
+    category: "Dal", gi: 29, giLevel: "low",
+    pcosScore: 8, pcodScore: 8, pmsScore: 7, moodScore: 7,
+    verdict: "High protein, very low GI — keeps you full for hours.",
+    hacks: ["Soak overnight", "Eat with brown rice", "Add ginger and hing"],
+    bestPhase: "Luteal", tags: ["plant protein", "fibre"]
+  },
+]
+
+
+export async function logMeal(foodName: string, mealType: string, sessionId: string) {
+  const { error } = await supabase
+    .from("meal_logs")
+    .insert({ food_name: foodName, meal_type: mealType, session_id: sessionId })
+  if (error) console.error("Meal log error:", error)
+  return !error
+}
+
+export async function getTodaysMeals(sessionId: string) {
+  const today = new Date().toISOString().split('T')[0]
+  const { data, error } = await supabase
+    .from("meal_logs")
+    .select("*")
+    .eq("session_id", sessionId)
+    .gte("logged_at", today)
+    .order("logged_at", { ascending: false })
+  if (error) return []
+  return data || []
+}
+
+export async function saveFood(foodName: string, sessionId: string) {
+  await supabase.from("saved_foods")
+    .upsert({ food_name: foodName, session_id: sessionId },
+             { onConflict: "session_id,food_name" })
+}
+
+export async function unsaveFood(foodName: string, sessionId: string) {
+  await supabase.from("saved_foods")
+    .delete()
+    .eq("food_name", foodName)
+    .eq("session_id", sessionId)
+}
+
+export async function getSavedFoods(sessionId: string): Promise<string[]> {
+  const { data } = await supabase
+    .from("saved_foods")
+    .select("food_name")
+    .eq("session_id", sessionId)
+  return data?.map((r: any) => r.food_name) || []
+}
