@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Poppins } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -48,9 +49,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} bg-background`}
     >
       <body className="font-sans antialiased">
-        <script dangerouslySetInnerHTML={{
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
           __html: `if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js') }`
-        }} />
+          }}
+        />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

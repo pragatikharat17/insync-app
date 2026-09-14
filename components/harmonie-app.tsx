@@ -8,13 +8,39 @@ import { BottomNav, type Tab } from "@/components/bottom-nav"
 import { SavedView, LogMealView, ProfileView } from "@/components/tab-views"
 import { cn } from "@/lib/utils"
 import { AskView } from "@/components/ask-view"
+import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
+import type { User } from "@supabase/supabase-js"
 
 export function HarmonieApp() {
+  // ALL hooks at the top — no exceptions
+  const router = useRouter()
   const [tab, setTab] = useState<Tab>("Search")
   const [query, setQuery] = useState("")
   const [activeCat, setActiveCat] = useState<"All" | Category>("All")
   const [allFoods, setAllFoods] = useState<Food[]>([])
+  const [savedIds, setSavedIds] = useState<string[]>([])
   const [profile, setProfile] = useState({ condition: "PCOS", phase: "Follicular" })
+  const [user, setUser] = useState<User | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      setAuthLoading(false)
+      if (!user) router.push('/login')
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+      if (!session?.user) router.push('/login')
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    fetchFoods().then(setAllFoods)
+  }, [])
+
   useEffect(() => {
     const saved = localStorage.getItem("insync-profile")
     if (saved) {
@@ -22,14 +48,6 @@ export function HarmonieApp() {
       setProfile({ condition: p.condition || "PCOS", phase: p.phase || "Follicular" })
     }
   }, [tab])
-  useEffect(() => { fetchFoods().then(setAllFoods) }, [])
-  const [savedIds, setSavedIds] = useState<string[]>(["besan-chilla"])
-
-  function toggleSave(id: string) {
-    setSavedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    )
-  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -42,17 +60,26 @@ export function HarmonieApp() {
         f.category.toLowerCase().includes(q)
       return matchCat && matchQuery
     })
-  }, [query, activeCat])
+  }, [query, activeCat, allFoods])
+
+  function toggleSave(id: string) {
+    setSavedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  // loading state AFTER all hooks
+  if (authLoading) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-muted-foreground text-sm">Loading...</div>
+    </div>
+  )
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-background pb-24">
-      {/* Header */}
       <header className="px-5 pt-8">
         <div className="flex items-center gap-2.5">
-          <span
-            className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground"
-            aria-hidden="true"
-          >
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground" aria-hidden="true">
             <Leaf className="size-5" />
           </span>
           <div>
@@ -69,12 +96,8 @@ export function HarmonieApp() {
       <main className="px-5 pt-6">
         {tab === "Search" && (
           <div className="space-y-4">
-            {/* Search bar */}
             <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden="true"
-              />
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <input
                 type="search"
                 value={query}
@@ -84,18 +107,12 @@ export function HarmonieApp() {
                 className="w-full rounded-full border border-input bg-card py-3.5 pl-12 pr-10 text-sm shadow-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
               />
               {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  aria-label="Clear search"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-secondary"
-                >
+                <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-secondary">
                   <X className="size-4" aria-hidden="true" />
                 </button>
               )}
             </div>
 
-            {/* Filter chips */}
             <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {categories.map((cat) => (
                 <button
@@ -114,46 +131,27 @@ export function HarmonieApp() {
               ))}
             </div>
 
-            {/* Results */}
             <p className="text-xs font-medium text-muted-foreground">
               {filtered.length} {filtered.length === 1 ? "food" : "foods"}
             </p>
 
             <div className="space-y-3">
               {filtered.map((food) => (
-                <FoodCard
-                  key={food.id}
-                  food={food}
-                  saved={savedIds.includes(food.id)}
-                  onToggleSave={toggleSave}
-                />
+                <FoodCard key={food.id} food={food} saved={savedIds.includes(food.id)} onToggleSave={toggleSave} />
               ))}
               {filtered.length === 0 && (
                 <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
-                  <p className="font-heading font-semibold text-foreground">
-                    No foods found
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Try a different search or filter.
-                  </p>
+                  <p className="font-heading font-semibold text-foreground">No foods found</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Try a different search or filter.</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {tab === "Saved" && (
-          <SavedView
-            foods={allFoods}
-            savedIds={savedIds}
-            onToggleSave={toggleSave}
-          />
-        )}
-
+        {tab === "Saved" && <SavedView foods={allFoods} savedIds={savedIds} onToggleSave={toggleSave} />}
         {tab === "Log Meal" && <LogMealView />}
-        {tab === "Ask" && (
-          <AskView condition={profile.condition} phase={profile.phase} />
-        )}
+        {tab === "Ask" && <AskView condition={profile.condition} phase={profile.phase} />}
         {tab === "Profile" && <ProfileView savedCount={savedIds.length} />}
       </main>
 

@@ -1,9 +1,4 @@
-import { createClient } from "@supabase/supabase-js"
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabase } from "@/lib/supabase"
 
 export type GiLevel = "low" | "medium" | "high"
 export type Category =
@@ -224,10 +219,10 @@ const FALLBACK_FOODS: Food[] = [
 ]
 
 
-export async function logMeal(foodName: string, mealType: string, sessionId: string) {
+export async function logMeal(foodName: string, mealType: string, userId: string) {
   const { error } = await supabase
     .from("meal_logs")
-    .insert({ food_name: foodName, meal_type: mealType, session_id: sessionId })
+    .insert({ food_name: foodName, meal_type: mealType, user_id: userId })
   if (error) console.error("Meal log error:", error)
   return !error
 }
