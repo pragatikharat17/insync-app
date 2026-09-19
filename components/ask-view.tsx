@@ -9,15 +9,11 @@ interface Message {
 interface AskViewProps {
   condition?: string
   phase?: string
+  messages: Message[]
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 }
 
-export function AskView({ condition = "PCOS", phase = "Follicular" }: AskViewProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "ai",
-      content: `Hi! I'm your InSync nutrition guide 🌿 Ask me anything about food and your ${condition}`,
-    },
-  ])
+export function AskView({ condition = "PCOS", phase = "Follicular", messages, setMessages }: AskViewProps) {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -27,20 +23,20 @@ export function AskView({ condition = "PCOS", phase = "Follicular" }: AskViewPro
   }, [messages, loading])
 
   async function sendMessage() {
-  const userText = input.trim()
-  if (!userText || loading) return
-  setInput("")
-  setMessages((prev) => [...prev, { role: "user", content: userText }])
-  setLoading(true)
-  try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userText, condition, phase }),
-    })
-    if (!res.ok) throw new Error("API error")
-    const aiText = await res.text()
-    setMessages((prev) => [...prev, { role: "ai", content: aiText }])
+    const userText = input.trim()
+    if (!userText || loading) return
+    setInput("")
+    setMessages((prev) => [...prev, { role: "user", content: userText }])
+    setLoading(true)
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText, condition, phase }),
+      })
+      if (!res.ok) throw new Error("API error")
+      const aiText = await res.text()
+      setMessages((prev) => [...prev, { role: "ai", content: aiText }])
     } catch {
       setMessages((prev) => [...prev, { role: "ai", content: "Sorry, trouble connecting. Try again!" }])
     } finally {

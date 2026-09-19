@@ -8,6 +8,7 @@ import { BottomNav, type Tab } from "@/components/bottom-nav"
 import { SavedView, LogMealView, ProfileView } from "@/components/tab-views"
 import { cn } from "@/lib/utils"
 import { AskView } from "@/components/ask-view"
+import type { Message } from "@/components/ask-view"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
@@ -23,6 +24,13 @@ export function HarmonieApp() {
   const [profile, setProfile] = useState({ condition: "PCOS", phase: "Follicular" })
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const [chatMessages, setChatMessages] = useState<Message[]>([
+    {
+      role: "ai" as const,
+      content: "Hi! I'm your InSync nutrition guide 🌿 Ask me anything about food and your PCOS",
+    },
+  ])
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -42,11 +50,16 @@ export function HarmonieApp() {
   }, [])
 
   useEffect(() => {
-    const saved = localStorage.getItem("insync-profile")
-    if (saved) {
-      const p = JSON.parse(saved)
-      setProfile({ condition: p.condition || "PCOS", phase: p.phase || "Follicular" })
-    }
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      const key = user ? `insync-profile-${user.id}` : "insync-profile"
+      const saved = localStorage.getItem(key)
+      if (saved) {
+        try {
+          const p = JSON.parse(saved)
+          setProfile({ condition: p.condition || "PCOS", phase: p.phase || "Follicular" })
+        } catch {}
+      }
+    })
   }, [tab])
 
   const filtered = useMemo(() => {
@@ -151,7 +164,14 @@ export function HarmonieApp() {
 
         {tab === "Saved" && <SavedView foods={allFoods} savedIds={savedIds} onToggleSave={toggleSave} />}
         {tab === "Log Meal" && <LogMealView />}
-        {tab === "Ask" && <AskView condition={profile.condition} phase={profile.phase} />}
+        {tab === "Ask" && (
+          <AskView
+          condition={profile.condition}
+          phase={profile.phase}
+          messages={chatMessages}
+          setMessages={setChatMessages}
+        />
+      )}
         {tab === "Profile" && <ProfileView savedCount={savedIds.length} />}
       </main>
 

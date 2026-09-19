@@ -62,15 +62,35 @@ export function SavedView({
 
 export function LogMealView() {
   const [meal, setMeal] = useState("")
-  const [logged, setLogged] = useState<string[]>([
-    ""
-  ])
+  const [logged, setLogged] = useState<string[]>([])
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    const key = `insync-meals-${today}`
+    const saved = localStorage.getItem(key)
+    if (saved) setLogged(JSON.parse(saved))
+  }, [])
 
   function add() {
     if (!meal.trim()) return
-    setLogged((l) => [meal.trim(), ...l])
-    setMeal("")
+  const newLogged = [meal.trim(), ...logged]
+  setLogged(newLogged)
+  const today = new Date().toISOString().split('T')[0]
+  localStorage.setItem(`insync-meals-${today}`, JSON.stringify(newLogged))
+  // update streak
+  const streakKey = 'insync-streak'
+  const lastKey = 'insync-last-log'
+  const last = localStorage.getItem(lastKey)
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayStr = yesterday.toISOString().split('T')[0]
+  const currentStreak = parseInt(localStorage.getItem(streakKey) || '0')
+  if (last === yesterdayStr || last === today) {
+    if (last !== today) localStorage.setItem(streakKey, String(currentStreak + 1))
+  } else {
+    localStorage.setItem(streakKey, '1')
   }
+  localStorage.setItem(lastKey, today)
+  } 
 
   return (
     <div className="space-y-5">
@@ -227,10 +247,13 @@ export function ProfileView({ savedCount }: { savedCount: number }) {
     setTimeout(() => setJustSaved(false), 2000)
   }
 
+  const today = new Date().toISOString().split('T')[0]
+  const todayMeals = JSON.parse(localStorage.getItem(`insync-meals-${today}`) || '[]')
+  const streak = parseInt(localStorage.getItem('insync-streak') || '0')
   const stats = [
     { label: "Foods saved", value: savedCount },
-    { label: "Meals logged", value: 0 },
-    { label: "Day streak", value: 0 },
+    { label: "Meals logged", value: todayMeals.length },
+    { label: "Day streak", value: streak },
   ]
 
   const initial = profile.name.trim().charAt(0).toUpperCase() || "Y"
