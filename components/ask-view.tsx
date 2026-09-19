@@ -27,32 +27,20 @@ export function AskView({ condition = "PCOS", phase = "Follicular" }: AskViewPro
   }, [messages, loading])
 
   async function sendMessage() {
-    const text = input.trim()
-    if (!text || loading) return
-    setInput("")
-    setMessages((prev) => [...prev, { role: "user", content: text }])
-    setLoading(true)
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, condition, phase }),
-      })
-      if (!res.ok) throw new Error("API error")
-      const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
-      let aiText = ""
-      setMessages((prev) => [...prev, { role: "ai", content: "" }])
-      while (reader) {
-        const { done, value } = await reader.read()
-        if (done) break
-        aiText += decoder.decode(value)
-        setMessages((prev) => {
-          const updated = [...prev]
-          updated[updated.length - 1] = { role: "ai", content: aiText }
-          return updated
-        })
-      }
+  const userText = input.trim()
+  if (!userText || loading) return
+  setInput("")
+  setMessages((prev) => [...prev, { role: "user", content: userText }])
+  setLoading(true)
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userText, condition, phase }),
+    })
+    if (!res.ok) throw new Error("API error")
+    const aiText = await res.text()
+    setMessages((prev) => [...prev, { role: "ai", content: aiText }])
     } catch {
       setMessages((prev) => [...prev, { role: "ai", content: "Sorry, trouble connecting. Try again!" }])
     } finally {

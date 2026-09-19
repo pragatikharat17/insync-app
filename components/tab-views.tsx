@@ -1,5 +1,5 @@
 "use client"
-
+import { supabase } from "@/lib/supabase"
 import { useEffect, useState } from "react"
 import {
   NotebookPen,
@@ -63,8 +63,7 @@ export function SavedView({
 export function LogMealView() {
   const [meal, setMeal] = useState("")
   const [logged, setLogged] = useState<string[]>([
-    "Besan Chilla · Breakfast",
-    "Moong Dal + Bajra Roti · Lunch",
+    ""
   ])
 
   function add() {
@@ -127,9 +126,9 @@ export function LogMealView() {
   )
 }
 
-const CONDITIONS = ["PCOS", "PCOD", "PMS", "All"] as const
+const CONDITIONS = ["PCOS", "PCOD", "PMS", "Normal cycle", "All"] as const
 const PHASES = ["Menstrual", "Follicular", "Ovulatory", "Luteal"] as const
-const STORAGE_KEY = "insync-profile"
+const getStorageKey = (userId?: string) => userId ? `insync-profile-${userId}` : "insync-profile"
 
 type Profile = {
   name: string
@@ -138,7 +137,7 @@ type Profile = {
 }
 
 const DEFAULT_PROFILE: Profile = {
-  name: "Pragati",
+  name: "Diva",
   condition: "PCOS",
   phase: "Luteal",
 }
@@ -192,26 +191,36 @@ export function ProfileView({ savedCount }: { savedCount: number }) {
   const [justSaved, setJustSaved] = useState(false)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const parsed = { ...DEFAULT_PROFILE, ...JSON.parse(raw) } as Profile
-        setProfile(parsed)
-        setDraft(parsed)
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      try {
+        const key = getStorageKey(user?.id)
+        const raw = localStorage.getItem(key)
+        if (raw) {
+          const parsed = { ...DEFAULT_PROFILE, ...JSON.parse(raw) } as Profile
+          setProfile(parsed)
+          setDraft(parsed)
+        } else if (user?.email) {
+          const emailName = user.email.split('@')[0]
+          const p = { ...DEFAULT_PROFILE, name: emailName }
+          setProfile(p)
+          setDraft(p)
+        }
+      } catch {
+        // ignore malformed storage
       }
-    } catch {
-      // ignore malformed storage
-    }
-  }, [])
+    })
+  }, [])  
 
   const dirty =
     draft.name !== profile.name ||
     draft.condition !== profile.condition ||
     draft.phase !== profile.phase
 
-  function save() {
+  async function save() {
+    const { data: { user } } = await supabase.auth.getUser()
+    const key = getStorageKey(user?.id)
     const cleaned: Profile = { ...draft, name: draft.name.trim() || "You" }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned))
+    localStorage.setItem(key, JSON.stringify(cleaned))
     setProfile(cleaned)
     setDraft(cleaned)
     setJustSaved(true)
@@ -220,8 +229,8 @@ export function ProfileView({ savedCount }: { savedCount: number }) {
 
   const stats = [
     { label: "Foods saved", value: savedCount },
-    { label: "Meals logged", value: 24 },
-    { label: "Day streak", value: 6 },
+    { label: "Meals logged", value: 0 },
+    { label: "Day streak", value: 0 },
   ]
 
   const initial = profile.name.trim().charAt(0).toUpperCase() || "Y"
